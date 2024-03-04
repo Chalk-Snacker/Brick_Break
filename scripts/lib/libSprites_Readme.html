@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TSprite Class Documentation</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <h1>TSprite Class Documentation</h1>
+
+    <!-- Constructor -->
+    <h2>TSprite</h2>
+    <dl>
+      <dt><code>function TSprite(aCanvas, aSpriteSheetImage, aSpriteAnimation, aDestination)</code></dt>
+      <dd>
+        <p>Constructor function for TSprite.</p>
+        <p>Parameters:</p>
+        <ul>
+          <li><code>aCanvas</code>: HTML canvas element to draw the sprite on.</li>
+          <li><code>aSpriteSheetImage</code>: Image containing the sprite sheet.</li>
+          <li><code>aSpriteAnimation</code>: Sprite animation configuration.</li>
+          <li><code>aDestination</code>: Coordinates of the destination point on the canvas.</li>
+        </ul>
+      </dd>
+    </dl>
+
+    <!-- Public Attributes -->
+    <h2>Public Attributes and Functions</h2>++
+    <dl>
+      <dt><code>draw()</code></dt>
+      <dd>
+        <p>Draws the current sprite on the canvas.</p>
+      </dd>
+
+      <dt><code>setSpeed(aNewSpeed)</code></dt>
+      <dd>
+        <p>Sets animation speed.</p>
+        <p>Parameters:</p>
+        <ul>
+          <li><code>aNewSpeed</code>: The new speed value.</li>
+        </ul>
+      </dd>
+
+      <dt><code>updateDestination(aNewX, aNewY)</code></dt>
+      <dd>
+        <p>Updates the destination point of the sprite.</p>
+        <p>Parameters:</p>
+        <ul>
+          <li><code>aNewX</code>: The new x-coordinate of the destination point.</li>
+          <li><code>aNewY</code>: The new y-coordinate of the destination point.</li>
+        </ul>
+      </dd>
+
+      <dt><code>setScale(aScalePercentage)</code></dt>
+      <dd>
+        <p>Sets the sprite's uniform scale with a percentage value.</p>
+        <p>Parameters:</p>
+        <ul>
+          <li><code>aScalePercentage</code>: The scale in %, 100% is no scale.</li>
+        </ul>
+      </dd>
+
+      <dt><code>setAlpha(aNewAlpha)</code></dt>
+      <dd>
+        <p>Sets the alpha (transparency) of the sprite.</p>
+        <p>Parameters:</p>
+        <ul>
+          <li><code>aNewAlpha</code>: The transparency in %, 100% is full opacity.</li>
+        </ul>
+      </dd>
+
+      <dt><code>animate()</code></dt>
+      <dd>
+        <p>Animates to the next frame based on speed.</p>
+      </dd>
+
+      <!-- Add descriptions for other public methods -->
+    </dl>
+
+    <h2>TSpriteButton</h2>
+    <dl>
+      <dt><code>function TSpriteButton(aCanvas, aSpriteSheetImage, aSpriteAnimation, aDestination, aClickCallBack)</code></dt>
+      <dd>
+        <p>Constructor function for TSpriteButton.</p>
+        <p>Parameters:</p>
+        <ul>
+          <li><code>aCanvas</code>: HTML canvas element to draw the button on.</li>
+          <li><code>aSpriteSheetImage</code>: Image containing the sprite sheet.</li>
+          <li><code>aSpriteAnimation</code>: Sprite animation configuration.</li>
+          <li><code>aDestination</code>: Coordinates of the destination point on the canvas.</li>
+          <li><code>aClickCallBack</code>: Callback function for when the button is clicked.</li>
+        </ul>
+      </dd>
+    </dl>
+    <h2 class="dropdown">Public Attributes and Functions</h2>
+    <dl class="dropdown">
+      <dt><code>draw()</code></dt>
+      <dd>
+        <p>Draws the button.</p>
+      </dd>
+    </dl>
+
+    <h2>TSpriteNumber</h2>
+    <dl>
+      <dt><code>function TSpriteNumber(aCanvas, aSpriteSheetImage, aSpriteAnimation, aDestination)</code></dt>
+      <dd>
+        <p>Constructor function for TSpriteNumber.</p>
+        <p>Parameters:</p>
+        <ul>
+          <li><code>aCanvas</code>: HTML canvas element to draw the number on.</li>
+          <li><code>aSpriteSheetImage</code>: Image containing the sprite sheet.</li>
+          <li><code>aSpriteAnimation</code>: Sprite animation configuration.</li>
+          <li><code>aDestination</code>: Coordinates of the destination point on the canvas.</li>
+        </ul>
+      </dd>
+    </dl>
+    <h2 class="dropdown">Public Attributes and Functions</h2>
+    <dl class="dropdown">
+      <dt><code>draw()</code></dt>
+      <dd>
+        <p>Draws the number.</p>
+      </dd>
+    </dl>
+  </body>
+</html>
