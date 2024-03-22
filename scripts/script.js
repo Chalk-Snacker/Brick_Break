@@ -131,7 +131,7 @@ function TCreateBall() {
     }
     // ball hit paddle
     else if (ballLeft <= paddleRight && ballRight >= paddleLeft && ballBottom >= paddleTop && ballTop < paddleBottom) {
-      ballPaddleCollision();
+      ballCollision(gameObjects.paddle);
     }
 
     // wall bounce
@@ -152,7 +152,7 @@ function TCreateBall() {
         ballTop < brick[i].pos.y + brick[i].height
       ) {
         console.log("ball hit brick");
-        ballBrickCollision(i);
+        ballCollision(gameObjects.brick[i]);
         gameObjects.brick[i].destroyBrick();
       }
     }
@@ -196,7 +196,9 @@ function mouseDown() {
 }
 function mouseUp() {
   const brick = mouseDown();
-  brick.pos = new TPoint(brick.pos.x, brick.pos.y);
+  if (brick) {
+    brick.pos = new TPoint(brick.pos.x, brick.pos.y);
+  }
 }
 function mouseMove(aEvent) {
   updateMousePos(aEvent);
@@ -241,13 +243,13 @@ function calculateSpeedVector(normalizedVector, speed) {
   return speedVector;
 }
 
-function ballPaddleCollision() {
-  gameObjects.paddle.center = {
-    x: gameObjects.paddle.pos.x + gameObjects.paddle.width / 2,
-    y: gameObjects.paddle.pos.y,
+function ballCollision(object) {
+  object.center = {
+    x: object.pos.x + object.width / 2,
+    // y: gameObjects.brick.pos.y,
   };
 
-  offset = gameObjects.ball.pos.x + gameObjects.ball.width / 2 - gameObjects.paddle.center.x;
+  offset = gameObjects.ball.pos.x + gameObjects.ball.width / 2 - object.center.x;
 
   // wasOffsetNegative blir true om offset er negativt
   wasOffsetNegative = offset < 0;
@@ -265,49 +267,7 @@ function ballPaddleCollision() {
     reflectionAngle = Math.atan2(speed.y, speed.x);
 
     // Oppdaterer vinkel iforhold til offset
-    reflectionAngle += (Math.PI / 4) * (offset / gameObjects.paddle.width);
-
-    // Oppdaterer vektor basert på den justerte vinkelen
-    vector.x = Math.cos(reflectionAngle);
-    vector.y = -Math.sin(reflectionAngle); // inverter y vektor for å sende den oppover igjen
-
-    // Oppdaterer speed med de ny oppdaterte vektorene
-    speed = calculateSpeedVector(vector, constantSpeed);
-
-    // Sjekk om x skal reverseres basert på om ballen traff høyre eller venstre side av paddle
-    if (wasOffsetNegative) {
-      speed.x = -Math.abs(speed.x);
-    } else {
-      console.log("høyre halvdel", wasOffsetNegative);
-      speed.x = Math.abs(speed.x);
-    }
-  }
-}
-
-function ballBrickCollision(i) {
-  gameObjects.brick.center = {
-    x: gameObjects.brick[i].pos.x + gameObjects.brick[i].width / 2,
-    // y: gameObjects.brick.pos.y,
-  };
-
-  offset = gameObjects.ball.pos.x + gameObjects.ball.width / 2 - gameObjects.brick.center.x;
-
-  // wasOffsetNegative blir true om offset er negativt
-  wasOffsetNegative = offset < 0;
-
-  if (offset < 0) {
-    offset *= -1;
-  }
-
-  if (offset <= 30) {
-    speed.y = -speed.y;
-    speed.x = -speed.x;
-  } else {
-    // Regner ut vinkel for refleksjon med atan2
-    reflectionAngle = Math.atan2(speed.y, speed.x);
-
-    // Oppdaterer vinkel iforhold til offset
-    reflectionAngle += (Math.PI / 4) * (offset / gameObjects.brick[i].width);
+    reflectionAngle += (Math.PI / 4) * (offset / object.width);
 
     // Oppdaterer vektor basert på den justerte vinkelen
     vector.x = Math.cos(reflectionAngle);
@@ -328,6 +288,7 @@ function ballBrickCollision(i) {
 
 /*  ---------------- TO DO ----------------
   - brick snapper feil når du flytter brick, trenger offset fra brick og mousepos
-  - 
+  - bytt ut pop i destroy brick, fjerner feil brick hvis man har flere i array'et
+    Bruk splice, og splice med i (fjerner hvilken som kolliderte)
 
 */
