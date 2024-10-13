@@ -1,15 +1,8 @@
 body {
   text-align: left;
 }
-#cvs {
-  background-color: lightblue;
-  display: inline-block;
-}
 
-#brickPanel {
-  width: 300px;
-  height: 500px;
-  background-color: green;
+#cvs {
+  background: linear-gradient(to right, lightblue 66.5%, green 34.5%);
   display: inline-block;
-  vertical-align: top;
 }

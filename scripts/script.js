@@ -1,49 +1,59 @@
 "use strict";
+import { ball_collision, calculate_normalized_vector, calculate_speed_vector } from "./calculations.js";
+
 let cvs,
   ctx,
-  speed,
   vector,
-  offset,
-  wasOffsetNegative,
-  reflectionAngle = null;
+  speed,
+  started = null;
 
-let gameOver = false;
-const constantSpeed = 5;
+let game_over = false;
+const constant_speed = 5;
+const lives = 3;
 
-const gameObjects = { paddle: null, ball: null, brick: [] };
-let mousePos = new TPoint(0, 0);
-const keyPress = {
+export const game_objects = { paddle: null, ball: null, brick: [], lives_left: [] };
+let mouse_pos = new T_Point(0, 0);
+const key_press = {
   a: false,
   d: false,
 };
 
-export function main(aCanvas) {
-  cvs = aCanvas;
+export function main(a_canvas) {
+  cvs = a_canvas;
   ctx = cvs.getContext("2d");
-  gameObjects.ball = new TCreateBall();
-  gameObjects.paddle = new TPaddle();
-  gameObjects.brick.push(new TBrick());
-  gameObjects.ball.moveBall();
 
-  document.addEventListener("keydown", handleKeyDown);
-  document.addEventListener("keyup", handleKeyUp);
-  document.addEventListener("mousemove", mouseMove);
-  document.addEventListener("mousedown", mouseDown);
-  document.addEventListener("mouseup", mouseUp);
-  drawGame();
+  game_objects.paddle = new T_Paddle();
+  game_objects.brick.push(new T_Brick());
+  for (let i = 0; i < lives; i++) {
+    game_objects.lives_left.push(new T_Lives(i));
+  }
+
+  document.addEventListener("keydown", handle_key_down);
+  document.addEventListener("keyup", handle_key_up);
+  document.addEventListener("mousemove", mouse_move);
+  document.addEventListener("mousedown", mouse_down);
+  document.addEventListener("mouseup", mouse_up);
+  document.addEventListener("keydown", function (event) {
+    if (event.code === "Space") {
+      start_game();
+    }
+  });
+
+  draw_game();
 }
 
 // ------- classes -------
 
-function TPoint(x, y) {
+function T_Point(x, y) {
   this.x = x;
   this.y = y;
 }
 
-function TBrick() {
+function T_Brick() {
+  // OPPDATER KLASSE TIL Å ULIKE TRAIS (TRENGER FLERE TREFF FOR Å GÅ I STYKKER) UTIFRA FARGE
   this.width = 70;
   this.height = 20;
-  this.pos = new TPoint(cvs.width / 2 - this.width / 2, cvs.height / 2 - this.height / 2);
+  this.pos = new T_Point(cvs.width - 300 / 2 - this.width / 2, cvs.height / 2 - this.height / 2);
   const color = "red";
 
   this.draw = function () {
@@ -51,19 +61,19 @@ function TBrick() {
     ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
   };
 
-  this.destroyBrick = function () {
-    gameObjects.brick.pop();
+  this.destroy_brick = function (i) {
+    game_objects.brick.splice(i, 1);
   };
 
-  this.moveBrickTest = function () {
-    this.pos = mousePos;
+  this.move_brick_test = function () {
+    this.pos = mouse_pos;
   };
 }
 
-function TPaddle() {
+function T_Paddle() {
   this.width = 300;
   this.height = 20;
-  this.pos = new TPoint(cvs.width / 2 - this.width / 2, cvs.height - 20);
+  this.pos = new T_Point((cvs.width - 300) / 2 - this.width / 2, cvs.height - 20);
   const color = "grey";
   let speed = 5;
   this.center = {
@@ -77,28 +87,30 @@ function TPaddle() {
   };
 
   this.update = function () {
-    if (keyPress.a && this.pos.x >= 0) {
+    if (key_press.a && this.pos.x >= 0) {
       this.pos.x -= speed;
+
+      console.log(game_objects.lives_left.length);
     }
-    if (keyPress.d && this.pos.x + this.width <= cvs.width) {
+    if (key_press.d && this.pos.x + this.width <= cvs.width - 300) {
       this.pos.x += speed;
     }
   };
 }
 
-function TCreateBall() {
+function T_Create_ball() {
   this.width = 50;
   this.height = 50;
-  this.pos = new TPoint(cvs.width / 2 - this.width / 2, 10);
+  this.pos = new T_Point(cvs.width / 2 - this.width / 2, 10);
   this.center = {
     x: this.pos.x + this.width / 2,
     y: this.pos.y,
   };
   const color = "white";
-  vector = calculateNormalizedVector(this.center, { x: 300, y: 200 });
-  speed = calculateSpeedVector(vector, constantSpeed);
+  vector = calculate_normalized_vector(this.center, { x: 300, y: 200 });
+  speed = calculate_speed_vector(vector, constant_speed);
 
-  this.moveBall = function () {};
+  this.move_ball = function () {};
 
   this.draw = function () {
     ctx.fillStyle = color.toString();
@@ -106,189 +118,160 @@ function TCreateBall() {
   };
 
   this.update = function () {
-    this.checkCollision();
+    this.check_collision();
     this.pos.x += speed.x;
     this.pos.y += speed.y;
-    if (!gameOver) {
+    if (!game_over) {
       // asdfasdfasdf
     }
   };
 
-  this.checkCollision = function () {
-    const paddleRight = gameObjects.paddle.pos.x + gameObjects.paddle.width;
-    const paddleLeft = gameObjects.paddle.pos.x;
-    const paddleBottom = gameObjects.paddle.pos.y + gameObjects.paddle.height;
-    const paddleTop = gameObjects.paddle.pos.y;
-    const ballRight = this.pos.x + this.width;
-    const ballLeft = this.pos.x;
-    const ballBottom = this.pos.y + this.height;
-    const ballTop = this.pos.y;
-    const brick = gameObjects.brick;
+  this.check_collision = function () {
+    if (!game_over) {
+      const paddle_right = game_objects.paddle.pos.x + game_objects.paddle.width;
+      const paddle_left = game_objects.paddle.pos.x;
+      const paddle_bottom = game_objects.paddle.pos.y + game_objects.paddle.height;
+      const paddle_top = game_objects.paddle.pos.y;
+      const ball_right = this.pos.x + this.width;
+      const ball_left = this.pos.x;
+      const ball_bottom = this.pos.y + this.height;
+      const ball_top = this.pos.y;
+      const brick = game_objects.brick;
 
-    // ball hits roof
-    if (ballTop <= 0) {
-      speed.y = -speed.y;
-    }
-    // ball hit paddle
-    else if (ballLeft <= paddleRight && ballRight >= paddleLeft && ballBottom >= paddleTop && ballTop < paddleBottom) {
-      ballCollision(gameObjects.paddle);
-    }
+      // ball hits roof
+      if (ball_top <= 0) {
+        speed.y = -speed.y;
+      }
+      // ball hit paddle
+      else if (ball_left <= paddle_right && ball_right >= paddle_left && ball_bottom >= paddle_top && ball_top < paddle_bottom) {
+        console.log("ball traff paddle");
+        speed = ball_collision(game_objects.paddle, speed);
+      }
 
-    // wall bounce
-    else if (this.pos.x <= 0 || this.pos.x + this.width >= cvs.width) {
-      speed.x = -speed.x;
-    }
-    // game over
-    else if (ballBottom >= cvs.height) {
-      gameOver = true;
-    }
+      // wall bounce
+      else if (this.pos.x <= 0 || this.pos.x + this.width >= cvs.width - 300) {
+        speed.x = -speed.x;
+      }
+      // game over
+      else if (ball_bottom >= cvs.height) {
+        game_over = true;
+        game_objects.lives_left.pop();
+        return;
+      }
 
-    // ball hit brick
-    for (let i = 0; i < gameObjects.brick.length; i++) {
-      if (
-        ballLeft <= brick[i].pos.x + brick[i].width &&
-        ballRight >= brick[i].pos.x &&
-        ballBottom >= brick[i].pos.y &&
-        ballTop < brick[i].pos.y + brick[i].height
-      ) {
-        console.log("ball hit brick");
-        ballCollision(gameObjects.brick[i]);
-        gameObjects.brick[i].destroyBrick();
+      // ball hit brick
+      for (let i = 0; i < game_objects.brick.length; i++) {
+        if (
+          ball_left <= brick[i].pos.x + brick[i].width &&
+          ball_right >= brick[i].pos.x &&
+          ball_bottom >= brick[i].pos.y &&
+          ball_top < brick[i].pos.y + brick[i].height
+        ) {
+          console.log("ball hit brick");
+          speed = ball_collision(game_objects.brick[i], speed);
+          game_objects.brick[i].destroy_brick(i);
+        }
       }
     }
   };
 }
+
+function T_Lives(i) {
+  this.width = 30;
+  this.height = 20;
+  let pos_x = cvs.width - 60;
+  this.pos = new T_Point(pos_x / 2 + 50 * i - this.width / 2, 20);
+  const color = "red";
+
+  this.draw = function () {
+    ctx.fillStyle = color.toString();
+    ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+  };
+
+  this.update = function () {
+    console.log(game_objects.lives_left.length);
+  };
+}
 // ------- end of classes -------
-
-function drawGame() {
+function draw_game() {
   ctx.clearRect(0, 0, cvs.width, cvs.height);
-  gameObjects.ball.draw();
-  gameObjects.ball.update();
-  gameObjects.paddle.draw();
-  gameObjects.paddle.update();
-
-  for (let i = 0; i < gameObjects.brick.length; i++) {
-    gameObjects.brick[i].draw();
+  if (started == true) {
+    game_objects.ball.draw();
+    game_objects.ball.update();
   }
-  requestAnimationFrame(drawGame);
+  for (let i = 0; i < game_objects.lives_left.length; i++) {
+    game_objects.lives_left[i].draw();
+  }
+  game_objects.paddle.draw();
+  game_objects.paddle.update();
+
+  for (let i = 0; i < game_objects.brick.length; i++) {
+    game_objects.brick[i].draw();
+  }
+  requestAnimationFrame(draw_game);
 }
 
-function handleKeyDown(event) {
-  if (event.key in keyPress) {
-    keyPress[event.key] = true;
+function handle_key_down(event) {
+  if (event.key in key_press) {
+    key_press[event.key] = true;
   }
 }
 
-function handleKeyUp(event) {
-  if (event.key in keyPress) {
-    keyPress[event.key] = false;
+function handle_key_up(event) {
+  if (event.key in key_press) {
+    key_press[event.key] = false;
   }
 }
 
-function mouseDown() {
-  for (let i = 0; i < gameObjects.brick.length; i++) {
-    const brick = gameObjects.brick[i];
-    if (mousePos.x <= brick.pos.x + brick.width && mousePos.x >= brick.pos.x && mousePos.y <= brick.pos.y + brick.height && mousePos.y >= brick.pos.y) {
-      brick.moveBrickTest();
+function mouse_down() {
+  for (let i = 0; i < game_objects.brick.length; i++) {
+    const brick = game_objects.brick[i];
+    if (mouse_pos.x <= brick.pos.x + brick.width && mouse_pos.x >= brick.pos.x && mouse_pos.y <= brick.pos.y + brick.height && mouse_pos.y >= brick.pos.y) {
+      brick.move_brick_test();
+      return brick;
     }
-    return brick;
   }
 }
-function mouseUp() {
-  const brick = mouseDown();
+function mouse_up() {
+  const brick = mouse_down();
   if (brick) {
-    brick.pos = new TPoint(brick.pos.x, brick.pos.y);
+    brick.pos = new T_Point(brick.pos.x, brick.pos.y);
+  }
+  if (mouse_pos.x && mouse_pos.y > 0 && mouse_pos.x && mouse_pos.y < cvs.width - 300) {
+    game_objects.brick.push(new T_Brick());
   }
 }
-function mouseMove(aEvent) {
-  updateMousePos(aEvent);
+function mouse_move(aEvent) {
+  // hvorfor ikke bare kjøre update_mouse_pos ?
+  update_mouse_pos(aEvent);
 }
-function updateMousePos(aEvent) {
-  mousePos.x = aEvent.clientX - cvs.offsetLeft;
-  mousePos.y = aEvent.clientY - cvs.offsetTop;
-}
-
-// ------------------------- PHYSICS -------------------------
-
-function calculateNormalizedVector(startingPoint, tartgetPoint) {
-  vector = {
-    x: tartgetPoint.x - startingPoint.x,
-    y: tartgetPoint.y - startingPoint.y,
-  };
-
-  let magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2);
-
-  let normalizedVector = {
-    x: vector.x / magnitude,
-    y: vector.y / magnitude,
-  };
-  return normalizedVector;
+function update_mouse_pos(aEvent) {
+  mouse_pos.x = aEvent.clientX - cvs.offsetLeft;
+  mouse_pos.y = aEvent.clientY - cvs.offsetTop;
 }
 
-function calculateSpeedVector(normalizedVector, speed) {
-  // regner ut hastighet utifra vektoren og en gitt speed den skaleres med
-  var speedVector = {
-    x: normalizedVector.x * speed,
-    y: normalizedVector.y * speed,
-  };
-
-  // regner ut størrelsen på vektoren (speed vector)
-  let speedMagnitude = Math.sqrt(speedVector.x ** 2 + speedVector.y ** 2);
-
-  // sjekker om hastigheten går over konstant hastighetsgrense
-  if (speedMagnitude > constantSpeed || speedMagnitude < constantSpeed) {
-    speedVector.x = (speedVector.x / speedMagnitude) * constantSpeed;
-    speedVector.y = (speedVector.y / speedMagnitude) * constantSpeed;
-  }
-  return speedVector;
-}
-
-function ballCollision(object) {
-  object.center = {
-    x: object.pos.x + object.width / 2,
-    // y: gameObjects.brick.pos.y,
-  };
-
-  offset = gameObjects.ball.pos.x + gameObjects.ball.width / 2 - object.center.x;
-
-  // wasOffsetNegative blir true om offset er negativt
-  wasOffsetNegative = offset < 0;
-
-  if (offset < 0) {
-    offset *= -1;
-  }
-
-  if (offset <= 30) {
-    console.log("midten?");
-    speed.y = -speed.y;
-    speed.x = -speed.x;
-  } else {
-    // Regner ut vinkel for refleksjon med atan2
-    reflectionAngle = Math.atan2(speed.y, speed.x);
-
-    // Oppdaterer vinkel iforhold til offset
-    reflectionAngle += (Math.PI / 4) * (offset / object.width);
-
-    // Oppdaterer vektor basert på den justerte vinkelen
-    vector.x = Math.cos(reflectionAngle);
-    vector.y = -Math.sin(reflectionAngle); // inverter y vektor for å sende den oppover igjen
-
-    // Oppdaterer speed med de ny oppdaterte vektorene
-    speed = calculateSpeedVector(vector, constantSpeed);
-
-    // Sjekk om x skal reverseres basert på om ballen traff høyre eller venstre side av paddle
-    if (wasOffsetNegative) {
-      speed.x = -Math.abs(speed.x);
+function start_game() {
+  if (game_over) {
+    if (game_objects.lives_left.length > 0) {
+      game_over = false;
+      game_objects.ball = new T_Create_ball();
+      started = true;
     } else {
-      console.log("høyre halvdel", wasOffsetNegative);
-      speed.x = Math.abs(speed.x);
+      console.log("game over");
     }
+  } else {
+    game_objects.ball = new T_Create_ball();
   }
+  started = true;
 }
+/* 13.10.24
 
-/*  ---------------- TO DO ----------------
-  - brick snapper feil når du flytter brick, trenger offset fra brick og mousepos
-  - bytt ut pop i destroy brick, fjerner feil brick hvis man har flere i array'et
-    Bruk splice, og splice med i (fjerner hvilken som kolliderte)
+-  oppdaterte syntax til snake_case
+- lagde canvas så drag and drop kan begynnes på (menyen er i canvas)
+- begynte på å lage et ekstra array for bricks som skal dras fra meny, så man kan skille mellom bricks som
+  kan bygges med og de som er allerede suttet ut.
 
+- starter spillet med space så man får tid til å bygge  
+- la til liv så kan tape
+    
 */
