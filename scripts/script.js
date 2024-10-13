@@ -8,7 +8,7 @@ let cvs,
   started = null;
 
 let game_over = false;
-const constant_speed = 5;
+const constant_speed = 5; // gjør sånn faktisk ingenting
 const lives = 3;
 
 export const game_objects = { paddle: null, ball: null, brick: [], lives_left: [] };
@@ -54,7 +54,7 @@ function T_Brick() {
   this.width = 70;
   this.height = 20;
   this.pos = new T_Point(cvs.width - 300 / 2 - this.width / 2, cvs.height / 2 - this.height / 2);
-  const color = "red";
+  const color = "yellow";
 
   this.draw = function () {
     ctx.fillStyle = color.toString();
@@ -89,9 +89,8 @@ function T_Paddle() {
   this.update = function () {
     if (key_press.a && this.pos.x >= 0) {
       this.pos.x -= speed;
-
-      console.log(game_objects.lives_left.length);
     }
+
     if (key_press.d && this.pos.x + this.width <= cvs.width - 300) {
       this.pos.x += speed;
     }
@@ -131,7 +130,7 @@ function T_Create_ball() {
       const paddle_right = game_objects.paddle.pos.x + game_objects.paddle.width;
       const paddle_left = game_objects.paddle.pos.x;
       const paddle_bottom = game_objects.paddle.pos.y + game_objects.paddle.height;
-      const paddle_top = game_objects.paddle.pos.y;
+      const paddle_top = game_objects.paddle.pos.y - 0.2;
       const ball_right = this.pos.x + this.width;
       const ball_left = this.pos.x;
       const ball_bottom = this.pos.y + this.height;
@@ -259,19 +258,8 @@ function start_game() {
     } else {
       console.log("game over");
     }
-  } else {
+  } else if (!started) {
     game_objects.ball = new T_Create_ball();
   }
   started = true;
 }
-/* 13.10.24
-
--  oppdaterte syntax til snake_case
-- lagde canvas så drag and drop kan begynnes på (menyen er i canvas)
-- begynte på å lage et ekstra array for bricks som skal dras fra meny, så man kan skille mellom bricks som
-  kan bygges med og de som er allerede suttet ut.
-
-- starter spillet med space så man får tid til å bygge  
-- la til liv så kan tape
-    
-*/
