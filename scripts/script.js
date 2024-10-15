@@ -122,10 +122,12 @@ function T_Brick(brick_color) {
   };
 
   this.move_brick_test = function () {
-    this.pos = mouse_pos;
-    if (this.pos.x > cvs.width - 300) {
-      this.pos.x = brick_to_build[this.color].pos_x;
-      this.pos.y = brick_to_build[this.color].pos_y;
+    if (!started) {
+      this.pos = mouse_pos;
+      if (this.pos.x > cvs.width - 300) {
+        this.pos.x = brick_to_build[this.color].pos_x;
+        this.pos.y = brick_to_build[this.color].pos_y;
+      }
     }
   };
 }
