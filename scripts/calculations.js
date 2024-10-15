@@ -38,6 +38,7 @@ export function calculate_speed_vector(normalized_vector, speed) {
 }
 
 export function ball_collision(object, speed) {
+  // må kanskje legge inn en cd for kalkulering, så den ikke gjør 1000000 hvis man treffer litt rart og paddle og ball ligger inntil hverandre i 1 sekund.
   object.center = {
     x: object.pos.x + object.width / 2,
   };

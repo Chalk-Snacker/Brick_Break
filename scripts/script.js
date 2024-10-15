@@ -10,6 +10,8 @@ let cvs,
 let game_over = false;
 const constant_speed = 5; // gjør sånn faktisk ingenting
 const lives = 3;
+let delay = 80; // ikke double tap
+let last_hit = 0;
 
 export const game_objects = { paddle: null, ball: null, brick: [], lives_left: [] };
 let mouse_pos = new T_Point(0, 0);
@@ -52,28 +54,39 @@ function T_Point(x, y) {
   this.y = y;
 }
 
+function check_delay() {
+  if (last_hit >= Date.now() - delay) {
+    console.log("get outa here");
+    return false;
+  }
+  last_hit = Date.now();
+  return true;
+}
+
 function T_Brick(brick_color) {
-  // OPPDATER KLASSE TIL Å ULIKE TRAIS (TRENGER FLERE TREFF FOR Å GÅ I STYKKER) UTIFRA FARGE
   this.width = 70;
   this.height = 20;
   this.color = brick_color;
 
   const brick_to_build = {
-    red: { pos_x: cvs.width - 300 / 2 - this.width / 2, pos_y: 200, health: 2 },
-    yellow: { pos_x: cvs.width - 300 / 2 - this.width / 2, pos_y: 100, health: 1 },
-    blue: { pos_x: cvs.width - 300 / 2 - this.width / 2, pos_y: 300, health: 3 },
+    red: { pos_x: cvs.width - 300 / 2 - this.width / 2, pos_y: 200 },
+    yellow: { pos_x: cvs.width - 300 / 2 - this.width / 2, pos_y: 100 },
+    blue: { pos_x: cvs.width - 300 / 2 - this.width / 2, pos_y: 300 },
   };
+  this.brick_health = null;
 
   switch (brick_color) {
     case "red":
-      this.pos = new T_Point(brick_to_build.red.pos_x, brick_to_build.red.pos_y);
-      // this.brick_health =
+      this.pos = new T_Point(brick_to_build[brick_color].pos_x, brick_to_build.red.pos_y);
+      this.brick_health = 2;
       break;
     case "yellow":
-      this.pos = new T_Point(brick_to_build.yellow.pos_x, brick_to_build.yellow.pos_y);
+      this.pos = new T_Point(brick_to_build[brick_color].pos_x, brick_to_build[brick_color].pos_y);
+      this.brick_health = 1;
       break;
     case "blue":
-      this.pos = new T_Point(brick_to_build.blue.pos_x, brick_to_build.blue.pos_y);
+      this.pos = new T_Point(brick_to_build[brick_color].pos_x, brick_to_build[brick_color].pos_y);
+      this.brick_health = 3;
       break;
     default:
       console.log("no color selected");
@@ -90,7 +103,22 @@ function T_Brick(brick_color) {
   };
 
   this.destroy_brick = function (i) {
-    game_objects.brick.splice(i, 1);
+    switch (this.brick_health) {
+      case 2:
+        this.color = "yellow";
+        ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+        break;
+      case 3:
+        this.color = "red";
+        ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+        break;
+    }
+    this.brick_health--;
+    console.log(this.brick_health);
+
+    if (this.brick_health <= 0) {
+      game_objects.brick.splice(i, 1);
+    }
   };
 
   this.move_brick_test = function () {
@@ -130,6 +158,7 @@ function T_Paddle() {
 }
 
 function T_Create_ball() {
+  let last_hit = 0;
   this.width = 50;
   this.height = 50;
   this.pos = new T_Point(cvs.width / 2 - this.width / 2, 10);
@@ -175,13 +204,17 @@ function T_Create_ball() {
       }
       // ball hit paddle
       else if (ball_left <= paddle_right && ball_right >= paddle_left && ball_bottom >= paddle_top && ball_top < paddle_bottom) {
-        console.log("ball traff paddle");
-        speed = ball_collision(game_objects.paddle, speed);
+        if (check_delay()) {
+          console.log("ball traff paddle");
+          speed = ball_collision(game_objects.paddle, speed);
+        }
       }
 
       // wall bounce
       else if (this.pos.x <= 0 || this.pos.x + this.width >= cvs.width - 300) {
-        speed.x = -speed.x;
+        if (check_delay()) {
+          speed.x = -speed.x;
+        }
       }
       // game over
       else if (ball_bottom >= cvs.height) {
@@ -198,9 +231,11 @@ function T_Create_ball() {
           ball_bottom >= brick[i].pos.y &&
           ball_top < brick[i].pos.y + brick[i].height
         ) {
-          console.log("ball hit brick");
-          speed = ball_collision(game_objects.brick[i], speed);
-          game_objects.brick[i].destroy_brick(i);
+          if (check_delay()) {
+            console.log("ball hit brick");
+            speed = ball_collision(game_objects.brick[i], speed);
+            game_objects.brick[i].destroy_brick(i);
+          }
         }
       }
     }
@@ -269,7 +304,7 @@ function mouse_up() {
   if (brick) {
     brick.pos = new T_Point(brick.pos.x, brick.pos.y);
   }
-  if (mouse_pos.x && mouse_pos.y > 0 && mouse_pos.x && mouse_pos.y < cvs.width - 300) {
+  if (mouse_pos.x && mouse_pos.y > 0 && mouse_pos.x < cvs.width - 300) {
     game_objects.brick.push(new T_Brick(brick.color));
     if (mouse_pos.x > cvs.width - 300) {
       game_objects.brick.pop();
