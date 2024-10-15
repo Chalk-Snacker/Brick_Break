@@ -23,7 +23,10 @@ export function main(a_canvas) {
   ctx = cvs.getContext("2d");
 
   game_objects.paddle = new T_Paddle();
-  game_objects.brick.push(new T_Brick());
+  game_objects.brick.push(new T_Brick("yellow"));
+  game_objects.brick.push(new T_Brick("red"));
+  game_objects.brick.push(new T_Brick("blue"));
+  // game_objects.brick.push(new T_Brick());
   for (let i = 0; i < lives; i++) {
     game_objects.lives_left.push(new T_Lives(i));
   }
@@ -49,15 +52,40 @@ function T_Point(x, y) {
   this.y = y;
 }
 
-function T_Brick() {
+function T_Brick(brick_color) {
   // OPPDATER KLASSE TIL Å ULIKE TRAIS (TRENGER FLERE TREFF FOR Å GÅ I STYKKER) UTIFRA FARGE
   this.width = 70;
   this.height = 20;
-  this.pos = new T_Point(cvs.width - 300 / 2 - this.width / 2, cvs.height / 2 - this.height / 2);
-  const color = "yellow";
+  this.color = brick_color;
+
+  const brick_to_build = {
+    red: { pos_x: cvs.width - 300 / 2 - this.width / 2, pos_y: 200, health: 2 },
+    yellow: { pos_x: cvs.width - 300 / 2 - this.width / 2, pos_y: 100, health: 1 },
+    blue: { pos_x: cvs.width - 300 / 2 - this.width / 2, pos_y: 300, health: 3 },
+  };
+
+  switch (brick_color) {
+    case "red":
+      this.pos = new T_Point(brick_to_build.red.pos_x, brick_to_build.red.pos_y);
+      // this.brick_health =
+      break;
+    case "yellow":
+      this.pos = new T_Point(brick_to_build.yellow.pos_x, brick_to_build.yellow.pos_y);
+      break;
+    case "blue":
+      this.pos = new T_Point(brick_to_build.blue.pos_x, brick_to_build.blue.pos_y);
+      break;
+    default:
+      console.log("no color selected");
+      this.pos = new T_Point(cvs.width - 300 / 2 - this.width / 2, 400);
+  }
 
   this.draw = function () {
-    ctx.fillStyle = color.toString();
+    if (this.color == undefined) {
+      ctx.fillStyle = "pink";
+    } else {
+      ctx.fillStyle = this.color;
+    }
     ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
   };
 
@@ -67,6 +95,10 @@ function T_Brick() {
 
   this.move_brick_test = function () {
     this.pos = mouse_pos;
+    if (this.pos.x > cvs.width - 300) {
+      this.pos.x = brick_to_build[this.color].pos_x;
+      this.pos.y = brick_to_build[this.color].pos_y;
+    }
   };
 }
 
@@ -233,11 +265,15 @@ function mouse_down() {
 }
 function mouse_up() {
   const brick = mouse_down();
+
   if (brick) {
     brick.pos = new T_Point(brick.pos.x, brick.pos.y);
   }
   if (mouse_pos.x && mouse_pos.y > 0 && mouse_pos.x && mouse_pos.y < cvs.width - 300) {
-    game_objects.brick.push(new T_Brick());
+    game_objects.brick.push(new T_Brick(brick.color));
+    if (mouse_pos.x > cvs.width - 300) {
+      game_objects.brick.pop();
+    }
   }
 }
 function mouse_move(aEvent) {
