@@ -306,7 +306,7 @@ function mouse_up() {
   if (brick) {
     brick.pos = new T_Point(brick.pos.x, brick.pos.y);
   }
-  if (mouse_pos.x && mouse_pos.y > 0 && mouse_pos.x < cvs.width - 300) {
+  if (mouse_pos.x && mouse_pos.y > 0 && mouse_pos.x < cvs.width - 300 && brick) {
     game_objects.brick.push(new T_Brick(brick.color));
     if (mouse_pos.x > cvs.width - 300) {
       game_objects.brick.pop();
