@@ -122,7 +122,7 @@ function T_Brick(brick_color) {
   };
 
   this.move_brick_test = function () {
-    if (!started) {
+    if (!started || game_over) {
       this.pos = mouse_pos;
       if (this.pos.x > cvs.width - 300) {
         this.pos.x = brick_to_build[this.color].pos_x;
