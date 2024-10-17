@@ -114,7 +114,6 @@ function T_Brick(brick_color) {
         break;
     }
     this.brick_health--;
-    console.log(this.brick_health);
 
     if (this.brick_health <= 0) {
       game_objects.brick.splice(i, 1);
@@ -314,7 +313,7 @@ function mouse_up() {
   }
 }
 function mouse_move(aEvent) {
-  // hvorfor ikke bare kjøre update_mouse_pos ?
+  //  kunne vel bare kjørt update_mouse_pos istedenfor denne funksjonen
   update_mouse_pos(aEvent);
 }
 function update_mouse_pos(aEvent) {
