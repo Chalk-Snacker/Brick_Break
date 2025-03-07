@@ -1,19 +1,57 @@
 "use strict";
-import { ball_collision, calculate_normalized_vector, calculate_speed_vector } from "./calculations.js";
+import {
+  ball_collision,
+  calculate_normalized_vector,
+  calculate_speed_vector,
+} from "./calculations.js";
+import lib2d_v2 from "./libs/lib2d_v2.mjs";
 
-let cvs,
-  ctx,
-  vector,
+import lib_2d from "./libs/lib2d_v2.mjs";
+import libSprite_v2 from "./libs/libSprite_v2.mjs";
+import lib_sprite from "./libs/libSprite_v2.mjs";
+
+export const Sheet_data = {
+  Background: { x: 1392, y: 0, width: 1187, height: 771, count: 1 },
+  BrickPurple: { x: 0, y: 717, width: 140, height: 41, count: 3 },
+  BrickRed: { x: 0, y: 778, width: 140, height: 41, count: 3 },
+  BrickYellow: { x: 0, y: 843, width: 140, height: 41, count: 3 },
+  BrickBlue: { x: 0, y: 906, width: 140, height: 41, count: 3 },
+  Buttons: { x: 0, y: 146, width: 55, height: 55, count: 4 },
+  StartBtn: { x: 0, y: 76, width: 186, height: 56, count: 5 },
+  SmallBar: { x: 0, y: 285, width: 158, height: 17, count: 1 },
+  LargeBar: { x: 159, y: 285, width: 226, height: 17, count: 1 },
+  Ball: { x: 79, y: 220, width: 30, height: 30, count: 1 },
+  NumberSmall: { x: 0, y: 1329, width: 23, height: 29, count: 10 },
+  NumberLarge: { x: 0, y: 1373, width: 50, height: 60, count: 10 },
+  Menu: { x: 1572, y: 780, width: 830, height: 671, count: 1 },
+  NoOfCrushedBricks: { x: 0, y: 217, width: 35, height: 34, count: 1 },
+};
+
+let vector,
   speed,
   started = null;
 
 let game_over = false;
-const constant_speed = 5; // gjør sånn faktisk ingenting
+const constant_speed = 0.000000001; // gjør sånn faktisk ingenting
 const lives = 3;
 let delay = 80; // ikke double tap
 let last_hit = 0;
 
-export const game_objects = { paddle: null, ball: null, brick: [], lives_left: [] };
+// -----------------------------------------
+
+const cvs = document.getElementById("cvs");
+const ctx = cvs.getContext("2d");
+const spcvs = new lib_sprite.TSpriteCanvas(cvs);
+const test_pos = new lib2d_v2.TPoint(300, 300);
+let test_noe;
+//let spcvs;
+
+export const game_objects = {
+  paddle: null,
+  ball: null,
+  brick: [],
+  lives_left: [],
+};
 let mouse_pos = new T_Point(0, 0);
 const key_press = {
   a: false,
@@ -21,9 +59,17 @@ const key_press = {
 };
 
 export function main(a_canvas) {
-  cvs = a_canvas;
-  ctx = cvs.getContext("2d");
+  //cvs = a_canvas;
+  //  ctx = cvs.getContext("2d");
 
+  //spcvs = new lib_sprite.TSpriteCanvas(cvs);
+
+  // test_noe er for å teste sprites når koordinatene bir lagt til
+  //test_noe = new libSprite_v2.TSprite(spcvs, Sheet_data.Ball, test_pos);
+
+  console.log(
+    "Instruction: Drag bricks from right panel to build your own level. Control bottom paddel with A and D, press space to start",
+  );
   game_objects.paddle = new T_Paddle();
   game_objects.brick.push(new T_Brick("yellow"));
   game_objects.brick.push(new T_Brick("red"));
@@ -77,15 +123,24 @@ function T_Brick(brick_color) {
 
   switch (brick_color) {
     case "red":
-      this.pos = new T_Point(brick_to_build[brick_color].pos_x, brick_to_build.red.pos_y);
+      this.pos = new T_Point(
+        brick_to_build[brick_color].pos_x,
+        brick_to_build.red.pos_y,
+      );
       this.brick_health = 2;
       break;
     case "yellow":
-      this.pos = new T_Point(brick_to_build[brick_color].pos_x, brick_to_build[brick_color].pos_y);
+      this.pos = new T_Point(
+        brick_to_build[brick_color].pos_x,
+        brick_to_build[brick_color].pos_y,
+      );
       this.brick_health = 1;
       break;
     case "blue":
-      this.pos = new T_Point(brick_to_build[brick_color].pos_x, brick_to_build[brick_color].pos_y);
+      this.pos = new T_Point(
+        brick_to_build[brick_color].pos_x,
+        brick_to_build[brick_color].pos_y,
+      );
       this.brick_health = 3;
       break;
     default:
@@ -123,7 +178,7 @@ function T_Brick(brick_color) {
   this.move_brick_test = function () {
     if (!started || game_over) {
       this.pos = mouse_pos;
-      if (this.pos.x > cvs.width - 300) {
+      if (this.pos.x > cvs.width - (300 + this.width)) {
         this.pos.x = brick_to_build[this.color].pos_x;
         this.pos.y = brick_to_build[this.color].pos_y;
       }
@@ -132,11 +187,14 @@ function T_Brick(brick_color) {
 }
 
 function T_Paddle() {
-  this.width = 300;
+  this.width = 200;
   this.height = 20;
-  this.pos = new T_Point((cvs.width - 300) / 2 - this.width / 2, cvs.height - 20);
+  this.pos = new T_Point(
+    (cvs.width - 300) / 2 - this.width / 2,
+    cvs.height - 20,
+  );
   const color = "grey";
-  let speed = 5;
+  let speed = 7;
   this.center = {
     x: this.pos.x + this.width / 2,
     y: this.pos.y,
@@ -189,9 +247,11 @@ function T_Create_ball() {
 
   this.check_collision = function () {
     if (!game_over) {
-      const paddle_right = game_objects.paddle.pos.x + game_objects.paddle.width;
+      const paddle_right =
+        game_objects.paddle.pos.x + game_objects.paddle.width;
       const paddle_left = game_objects.paddle.pos.x;
-      const paddle_bottom = game_objects.paddle.pos.y + game_objects.paddle.height;
+      const paddle_bottom =
+        game_objects.paddle.pos.y + game_objects.paddle.height;
       const paddle_top = game_objects.paddle.pos.y - 0.2;
       const ball_right = this.pos.x + this.width;
       const ball_left = this.pos.x;
@@ -204,7 +264,12 @@ function T_Create_ball() {
         speed.y = -speed.y;
       }
       // ball hit paddle
-      else if (ball_left <= paddle_right && ball_right >= paddle_left && ball_bottom >= paddle_top && ball_top < paddle_bottom) {
+      else if (
+        ball_left <= paddle_right &&
+        ball_right >= paddle_left &&
+        ball_bottom >= paddle_top &&
+        ball_top < paddle_bottom
+      ) {
         if (check_delay()) {
           console.log("ball traff paddle");
           speed = ball_collision(game_objects.paddle, speed);
@@ -213,12 +278,13 @@ function T_Create_ball() {
 
       // wall bounce
       else if (this.pos.x <= 0 || this.pos.x + this.width >= cvs.width - 300) {
+        // mulig at delay gjør at hvis den treffer veldig mange ganger kjapt rekker den ikke å se om den skal bounce fra veggen?
         if (check_delay()) {
           speed.x = -speed.x;
         }
       }
       // game over
-      else if (ball_bottom >= cvs.height) {
+      else if (ball_bottom > cvs.height) {
         game_over = true;
         game_objects.lives_left.pop();
         return;
@@ -275,6 +341,7 @@ function draw_game() {
   for (let i = 0; i < game_objects.brick.length; i++) {
     game_objects.brick[i].draw();
   }
+  test_noe.draw();
   requestAnimationFrame(draw_game);
 }
 
@@ -293,7 +360,12 @@ function handle_key_up(event) {
 function mouse_down() {
   for (let i = 0; i < game_objects.brick.length; i++) {
     const brick = game_objects.brick[i];
-    if (mouse_pos.x <= brick.pos.x + brick.width && mouse_pos.x >= brick.pos.x && mouse_pos.y <= brick.pos.y + brick.height && mouse_pos.y >= brick.pos.y) {
+    if (
+      mouse_pos.x <= brick.pos.x + brick.width &&
+      mouse_pos.x >= brick.pos.x &&
+      mouse_pos.y <= brick.pos.y + brick.height &&
+      mouse_pos.y >= brick.pos.y
+    ) {
       brick.move_brick_test();
       return brick;
     }
@@ -305,7 +377,12 @@ function mouse_up() {
   if (brick) {
     brick.pos = new T_Point(brick.pos.x, brick.pos.y);
   }
-  if (mouse_pos.x && mouse_pos.y > 0 && mouse_pos.x < cvs.width - 300 && brick) {
+  if (
+    mouse_pos.x &&
+    mouse_pos.y > 0 &&
+    mouse_pos.x < cvs.width - 300 &&
+    brick
+  ) {
     game_objects.brick.push(new T_Brick(brick.color));
     if (mouse_pos.x > cvs.width - 300) {
       game_objects.brick.pop();
@@ -335,3 +412,5 @@ function start_game() {
   }
   started = true;
 }
+console.log(spcvs);
+spcvs.loadSpriteSheet("../media/spritesheetExp1.png", main);

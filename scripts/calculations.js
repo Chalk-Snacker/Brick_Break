@@ -2,9 +2,10 @@
 import { game_objects } from "./script.js";
 
 let vector = null;
-const constant_speed = 5;
+const constant_speed = 10;
 
 export function calculate_normalized_vector(starting_point, tartget_point) {
+  // hvis du skal starte med ballen på paddle, må du kalkulere target_point utifra hvor du er og sende den rett opp
   vector = {
     x: tartget_point.x - starting_point.x,
     y: tartget_point.y - starting_point.y,
@@ -26,7 +27,7 @@ export function calculate_speed_vector(normalized_vector, speed) {
     y: normalized_vector.y * speed,
   };
 
-  // regner ut størrelsen på vektoren (speed vector)
+  // regner ut størrelsen på vektoren (speed vector) (hypothenus = lengden på vektoren = hastigheten)
   let speed_magnitude = Math.sqrt(speed_vector.x ** 2 + speed_vector.y ** 2);
 
   // sjekker om hastigheten går over konstant hastighetsgrense
