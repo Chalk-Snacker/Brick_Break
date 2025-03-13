@@ -1,4 +1,13 @@
 "use strict";
+
+/*
+ * To do:
+ * add sprite coordinates and replace blocks with sprites
+ * ball can get "stuck" bounding horizontally "almost" forever if unlucky, check on the y position with a timer and slowly increase/ decrease y?
+ * havent updated the collision check on paddle to check when the ball hits the side, so it goes through
+ * move classes to seperate files
+ */
+
 import {
   ball_collision,
   calculate_normalized_vector,
