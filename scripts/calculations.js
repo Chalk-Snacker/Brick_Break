@@ -2,7 +2,7 @@
 import { game_objects } from "./script.js";
 
 let vector = null;
-const constant_speed = 10;
+const constant_speed = 7.5;
 
 export function calculate_normalized_vector(starting_point, tartget_point) {
   // hvis du skal starte med ballen på paddle, må du kalkulere target_point utifra hvor du er og sende den rett opp
@@ -22,9 +22,10 @@ export function calculate_normalized_vector(starting_point, tartget_point) {
 
 export function calculate_speed_vector(normalized_vector, speed) {
   // regner ut hastighet utifra vektoren og en gitt speed den skaleres med
-  var speed_vector = {
-    x: normalized_vector.x * speed,
-    y: normalized_vector.y * speed,
+
+  const speed_vector = {
+    x: normalized_vector.x * constant_speed,
+    y: normalized_vector.y * constant_speed,
   };
 
   // regner ut størrelsen på vektoren (speed vector) (hypothenus = lengden på vektoren = hastigheten)
@@ -38,13 +39,14 @@ export function calculate_speed_vector(normalized_vector, speed) {
   return speed_vector;
 }
 
-export function ball_collision(object, speed) {
+export function ball_collision(object) {
   // må kanskje legge inn en cd for kalkulering, så den ikke gjør 1000000 hvis man treffer litt rart og paddle og ball ligger inntil hverandre i 1 sekund.
   object.center = {
     x: object.pos.x + object.width / 2,
   };
 
-  let offset = game_objects.ball.pos.x + game_objects.ball.width / 2 - object.center.x;
+  let offset =
+    game_objects.ball.pos.x + game_objects.ball.width / 2 - object.center.x;
 
   // was_offset_negative blir true om offset er negativt
   let was_offset_negative = offset < 0;
@@ -55,12 +57,14 @@ export function ball_collision(object, speed) {
 
   if (offset <= 30) {
     console.log("midten?");
-    speed.y = -speed.y;
-    speed.x = -speed.x;
+    game_objects.ball.speed.y = -game_objects.ball.speed.y;
+    game_objects.ball.speed.x = -game_objects.ball.speed.x;
   } else {
     // Regner ut vinkel for refleksjon med atan2
-    let reflection_angle = Math.atan2(speed.y, speed.x);
-
+    let reflection_angle = Math.atan2(
+      game_objects.ball.speed.y,
+      game_objects.ball.speed.x,
+    );
     // Oppdaterer vinkel iforhold til offset
     reflection_angle += (Math.PI / 4) * (offset / object.width);
 
@@ -69,15 +73,13 @@ export function ball_collision(object, speed) {
     vector.y = -Math.sin(reflection_angle); // inverter y vektor for å sende den oppover igjen
 
     // Oppdaterer speed med de ny oppdaterte vektorene
-    speed = calculate_speed_vector(vector, constant_speed);
-
+    game_objects.ball.speed = calculate_speed_vector(vector, constant_speed);
     // Sjekk om x skal reverseres basert på om ballen traff høyre eller venstre side av paddle
     if (was_offset_negative) {
-      speed.x = -Math.abs(speed.x);
+      game_objects.ball.speed.x = -Math.abs(game_objects.ball.speed.x);
     } else {
       console.log("høyre halvdel", was_offset_negative);
-      speed.x = Math.abs(speed.x);
+      game_objects.ball.speed.x = Math.abs(game_objects.ball.speed.x);
     }
   }
-  return speed;
 }

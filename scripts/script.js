@@ -13,11 +13,9 @@ import lib_sprite from "./libs/libSprite_v2.mjs";
 //Sheet_data coordinates
 
 let vector,
-  speed,
   started = null;
 
 let game_over = false;
-const constant_speed = 0.000000001; // gjør sånn faktisk ingenting
 const lives = 3;
 let delay = 80; // ikke double tap
 let last_hit = 0;
@@ -28,8 +26,7 @@ const cvs = document.getElementById("cvs");
 const ctx = cvs.getContext("2d");
 const spcvs = new lib_sprite.TSpriteCanvas(cvs);
 const test_pos = new lib2d_v2.TPoint(300, 300);
-let test_noe;
-//let spcvs;
+//let test_noe;
 
 export const game_objects = {
   paddle: null,
@@ -69,7 +66,7 @@ export function main(a_canvas) {
   document.addEventListener("mousemove", mouse_move);
   document.addEventListener("mousedown", mouse_down);
   document.addEventListener("mouseup", mouse_up);
-  document.addEventListener("keydown", function (event) {
+  document.addEventListener("keydown", function(event) {
     if (event.code === "Space") {
       start_game();
     }
@@ -133,7 +130,7 @@ function T_Brick(brick_color) {
       this.pos = new T_Point(cvs.width - 300 / 2 - this.width / 2, 400);
   }
 
-  this.draw = function () {
+  this.draw = function() {
     if (this.color == undefined) {
       ctx.fillStyle = "pink";
     } else {
@@ -142,7 +139,7 @@ function T_Brick(brick_color) {
     ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
   };
 
-  this.destroy_brick = function (i) {
+  this.destroy_brick = function(i) {
     switch (this.brick_health) {
       case 2:
         this.color = "yellow";
@@ -160,7 +157,7 @@ function T_Brick(brick_color) {
     }
   };
 
-  this.move_brick_test = function () {
+  this.move_brick_test = function() {
     if (!started || game_over) {
       this.pos = mouse_pos;
       if (this.pos.x > cvs.width - (300 + this.width)) {
@@ -185,12 +182,12 @@ function T_Paddle() {
     y: this.pos.y,
   };
 
-  this.draw = function () {
+  this.draw = function() {
     ctx.fillStyle = color.toString();
     ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
   };
 
-  this.update = function () {
+  this.update = function() {
     if (key_press.a && this.pos.x >= 0) {
       this.pos.x -= speed;
     }
@@ -202,7 +199,6 @@ function T_Paddle() {
 }
 
 function T_Create_ball() {
-  let last_hit = 0;
   this.width = 50;
   this.height = 50;
   this.pos = new T_Point(cvs.width / 2 - this.width / 2, 10);
@@ -212,25 +208,25 @@ function T_Create_ball() {
   };
   const color = "white";
   vector = calculate_normalized_vector(this.center, { x: 300, y: 200 });
-  speed = calculate_speed_vector(vector, constant_speed);
+  this.speed = calculate_speed_vector(vector);
 
-  this.move_ball = function () {};
+  this.move_ball = function() { };
 
-  this.draw = function () {
+  this.draw = function() {
     ctx.fillStyle = color.toString();
     ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
   };
 
-  this.update = function () {
+  this.update = function() {
     this.check_collision();
-    this.pos.x += speed.x;
-    this.pos.y += speed.y;
+    this.pos.x += this.speed.x;
+    this.pos.y += this.speed.y;
     if (!game_over) {
       // asdfasdfasdf
     }
   };
 
-  this.check_collision = function () {
+  this.check_collision = function() {
     if (!game_over) {
       const paddle_right =
         game_objects.paddle.pos.x + game_objects.paddle.width;
@@ -246,7 +242,7 @@ function T_Create_ball() {
 
       // ball hits roof
       if (ball_top <= 0) {
-        speed.y = -speed.y;
+        this.speed.y = -this.speed.y;
       }
       // ball hit paddle
       else if (
@@ -257,7 +253,7 @@ function T_Create_ball() {
       ) {
         if (check_delay()) {
           console.log("ball traff paddle");
-          speed = ball_collision(game_objects.paddle, speed);
+          ball_collision(game_objects.paddle);
         }
       }
 
@@ -265,7 +261,7 @@ function T_Create_ball() {
       else if (this.pos.x <= 0 || this.pos.x + this.width >= cvs.width - 300) {
         // mulig at delay gjør at hvis den treffer veldig mange ganger kjapt rekker den ikke å se om den skal bounce fra veggen?
         if (check_delay()) {
-          speed.x = -speed.x;
+          this.speed.x = -this.speed.x;
         }
       }
       // game over
@@ -285,7 +281,7 @@ function T_Create_ball() {
         ) {
           if (check_delay()) {
             console.log("ball hit brick");
-            speed = ball_collision(game_objects.brick[i], speed);
+            ball_collision(game_objects.brick[i]);
             game_objects.brick[i].destroy_brick(i);
           }
         }
@@ -301,12 +297,12 @@ function T_Lives(i) {
   this.pos = new T_Point(pos_x / 2 + 50 * i - this.width / 2, 20);
   const color = "red";
 
-  this.draw = function () {
+  this.draw = function() {
     ctx.fillStyle = color.toString();
     ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
   };
 
-  this.update = function () {
+  this.update = function() {
     console.log(game_objects.lives_left.length);
   };
 }
@@ -326,7 +322,7 @@ function draw_game() {
   for (let i = 0; i < game_objects.brick.length; i++) {
     game_objects.brick[i].draw();
   }
-  test_noe.draw();
+  //  test_noe.draw();
   requestAnimationFrame(draw_game);
 }
 
